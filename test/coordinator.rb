@@ -3,6 +3,71 @@ require 'minitest/autorun'
 
 include PaxosDemo
 
+describe HashCoordinator do
+  before do
+    @clear = {
+      alice: 35,
+      bob: 32,
+      charlie: 30,
+      david: 5
+    }
+
+    @unclear = {
+      alice: 35,
+      bob: 35,
+      charlie: 35,
+      david: 30,
+    }
+
+    @reverse = {
+      alice: 5,
+      bob: 30,
+      charlie: 32,
+      david: 35,
+    }
+
+    @tied = {
+      alice: 2,
+      bob: 2,
+      charlie: 2,
+    }
+
+    @empty = {}
+
+    @net = Network.new('test')
+    @hc = HashCoordinator.new('test', @net)
+    @client = Client.new('test', @net)
+  end
+
+  it "must determine the majority message" do
+    expect(HashCoordinator.process(@clear)).must_equal(:alice)
+    expect(HashCoordinator.process(@reverse)).must_equal(:david)
+    25.times {
+      unc = HashCoordinator.process(@unclear)
+      expect(unc).wont_equal(:david)
+      expect([:alice, :bob, :charlie]).must_include(unc)
+      ted = HashCoordinator.process(@tied)
+      expect(ted).wont_equal(:david)
+      expect([:alice, :bob, :charlie]).must_include(ted)
+    }
+    expect(HashCoordinator.process(@empty)).must_be_nil
+  end
+
+  it "must accumulate messages in a Hash" do
+    @clear.each { |msg, cnt|
+      cnt.times { @client.send(msg, @hc) }
+    }
+    expect(@hc.msgs).must_equal @clear
+    expect(@hc.process_msgs).must_equal :alice
+
+    @reverse.each { |msg, cnt|
+      cnt.times { @client.send(msg, @hc) }
+    }
+    expect(@hc.msgs).must_equal @reverse
+    expect(@hc.process_msgs).must_equal :david
+  end
+end
+
 describe Coordinator do
   it "must find the most common member of an array" do
     def create_ary(hsh)
@@ -12,7 +77,7 @@ describe Coordinator do
       }
       ary
     end
-    
+
     clear = create_ary({
                          alice: 35,
                          bob: 32,
@@ -41,7 +106,7 @@ describe Coordinator do
                       })
 
     empty = []
-    
+
     expect(Coordinator.process(clear)).must_equal(:alice)
     expect(Coordinator.process(reverse)).must_equal(:david)
     25.times {

@@ -6,7 +6,7 @@ module PaxosDemo
       @name = name
       @network = network
     end
-    
+
     def send(msg, to)
       @network.deliver(msg, self, to)
     end
@@ -70,6 +70,39 @@ module PaxosDemo
       maj = self.class.process(@msg_buf)
       puts "maj = #{maj}"
       @msg_buf = []
+    end
+  end
+
+  class HashCoordinator < Client
+    def self.process(msgs)
+      mesg = nil
+      count = 0
+      msgs.each { |msg, cnt|
+        if cnt > count
+          mesg = msg
+          count = cnt
+        end
+      }
+      mesg
+    end
+
+    attr_reader :msgs
+
+    def initialize(name, network)
+      @msgs = {}
+      super(name, network)
+    end
+
+    def receive(msg, from)
+      @msgs[msg] ||= 0
+      @msgs[msg] += 1
+      super(msg, from)
+    end
+
+    def process_msgs
+      maj = self.class.process(@msgs)
+      @msgs = {}
+      maj
     end
   end
 
