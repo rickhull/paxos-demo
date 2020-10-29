@@ -40,6 +40,8 @@ describe Coordinator do
                         charlie: 2,
                       })
 
+    empty = []
+    
     expect(Coordinator.process(clear)).must_equal(:alice)
     expect(Coordinator.process(reverse)).must_equal(:david)
     25.times {
@@ -50,5 +52,6 @@ describe Coordinator do
       expect(ted).wont_equal(:david)
       expect([:alice, :bob, :charlie]).must_include(ted)
     }
+    expect(Coordinator.process(empty)).must_be_nil
   end
 end
