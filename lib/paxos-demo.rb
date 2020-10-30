@@ -21,14 +21,19 @@ module PaxosDemo
   end
 
   class Client
-    def initialize(name, network, failure_rate: 0.0)
+    def initialize(name, network, failure_rate: 0.0, log: false)
       @name = name
       @network = network
       @failure_rate = failure_rate
+      @log = log
     end
 
     def send(msg, to)
-      @network.deliver(msg, self, to) if Random.rand > @failure_rate
+      if Random.rand > @failure_rate
+        @network.deliver(msg, self, to)
+      else
+        puts "send failed: #{self} -> #{to}: #{msg}" if @log
+      end
     end
 
     def receive(msg, from)
@@ -55,9 +60,9 @@ module PaxosDemo
 
     attr_reader :msgs
 
-    def initialize(name, network)
+    def initialize(*args)
       @msgs = {}
-      super(name, network)
+      super(*args)
     end
 
     def receive(msg, from)
