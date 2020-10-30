@@ -4,19 +4,18 @@ module PaxosDemo
   end
 
   class Network
-    LOG = true
-
-    def initialize(name, failure_rate: 0.0)
+    def initialize(name, failure_rate: 0.0, log: true)
       @name = name
       @failure_rate = failure_rate
+      @log = log
     end
 
     def deliver(msg, from, to)
       if Random.rand > @failure_rate
-        puts "[#{@name}] #{from} -> #{to}: #{msg} [OK]" if LOG
+        puts "[#{@name}] #{from} -> #{to}: #{msg} [OK]" if @log
         to.receive(msg, from)
       else
-        puts "[#{@name}] #{from} -> #{to}: #{msg} [FAIL]" if LOG
+        puts "[#{@name}] #{from} -> #{to}: #{msg} [FAIL]" if @log
       end
     end
   end
