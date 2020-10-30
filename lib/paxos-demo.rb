@@ -3,34 +3,10 @@ module PaxosDemo
     args.all? args[0]
   end
 
-  class Client
-    FAILURE_RATE = 0.0
-    LOG = false
-
-    def initialize(name, network)
-      @name = name
-      @network = network
-    end
-
-    def send(msg, to)
-      @network.deliver(msg, self, to)
-    end
-
-    def receive(msg, from)
-      puts "#{@name} received #{msg} from #{from}" if LOG
-      msg
-    end
-
-    def to_s
-      @name
-    end
-  end
-
   class Network
-    FAILURE_RATE = 0.0
     LOG = true
 
-    def initialize(name, failure_rate: FAILURE_RATE)
+    def initialize(name, failure_rate: 0.0)
       @name = name
       @failure_rate = failure_rate
     end
@@ -42,6 +18,26 @@ module PaxosDemo
       else
         puts "[#{@name}] #{from} -> #{to}: #{msg} [FAIL]" if LOG
       end
+    end
+  end
+
+  class Client
+    def initialize(name, network, failure_rate: 0.0)
+      @name = name
+      @network = network
+      @failure_rate = failure_rate
+    end
+
+    def send(msg, to)
+      @network.deliver(msg, self, to) if Random.rand > @failure_rate
+    end
+
+    def receive(msg, from)
+      msg
+    end
+
+    def to_s
+      @name
     end
   end
 
@@ -76,13 +72,5 @@ module PaxosDemo
       @msgs = {}
       maj
     end
-  end
-
-  class UnreliableClient < Client
-    FAILURE_RATE = 0.1
-  end
-
-  class UnreliableNetwork < Client
-    FAILURE_RATE = 0.1
   end
 end
