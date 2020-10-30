@@ -34,7 +34,7 @@ describe Coordinator do
 
     @empty = {}
 
-    @net = Network.new('test')
+    @net = Network.new('test', log: false)
     @hc = Coordinator.new('test', @net)
     @client = Client.new('test', @net)
   end
