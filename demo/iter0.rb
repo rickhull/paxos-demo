@@ -19,6 +19,13 @@ charlie.send(alt_proposal, coord)
 consensus = coord.process_msgs
 puts "Coordinator decided on #{consensus}"
 
-coord.send(consensus, alice)
-coord.send(consensus, bob)
-coord.send(consensus, charlie)
+alice_val = coord.send(consensus, alice)
+bob_val = coord.send(consensus, bob)
+charlie_val = coord.send(consensus, charlie)
+
+puts "Checking consensus..."
+puts "  Alice has: #{alice_val}"
+puts "    Bob has: #{bob_val}"
+puts "Charlie has: #{charlie_val}"
+
+puts "Agreement: #{PaxosDemo.agreement?(alice_val, bob_val, charlie_val)}"
