@@ -30,12 +30,13 @@ module PaxosDemo
     FAILURE_RATE = 0.0
     LOG = true
 
-    def initialize(name)
+    def initialize(name, failure_rate: FAILURE_RATE)
       @name = name
+      @failure_rate = failure_rate
     end
 
     def deliver(msg, from, to)
-      if Random.rand > self.class::FAILURE_RATE
+      if Random.rand > @failure_rate
         puts "[#{@name}] #{from} -> #{to}: #{msg} [OK]" if LOG
         to.receive(msg, from)
       else
