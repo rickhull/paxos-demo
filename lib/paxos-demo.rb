@@ -1,4 +1,8 @@
 module PaxosDemo
+  def self.agreement?(*args)
+    args.all? args[0]
+  end
+
   class Client
     FAILURE_RATE = 0.0
     LOG = false
