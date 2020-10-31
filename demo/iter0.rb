@@ -34,7 +34,7 @@ puts "Agreement: #{PaxosDemo.agreement?(alice_val, bob_val, charlie_val)}"
 puts
 failure_rate = 0.3
 puts "=" * 40
-puts "Now adding network failures (#{failure_rate * 100}%)"
+puts "Now adding Network failures (#{failure_rate * 100}%)"
 puts "=" * 40
 puts
 
