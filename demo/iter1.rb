@@ -23,7 +23,7 @@ include PaxosDemo
   }
 
   client_registry.each { |client, reg|
-    reg[:proposal] = Random.rand(3)
+    reg[:proposal] = Random.rand(client_registry.keys.length)
     coords.each { |coord|
       client.send(reg[:proposal], coord)
     }
