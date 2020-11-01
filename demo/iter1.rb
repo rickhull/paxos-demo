@@ -30,6 +30,7 @@ include PaxosDemo
   }
 
   coords.each { |coord|
+    puts "#{coord} has: #{coord.msgs}"
     vote = coord.process_msgs
     puts "#{coord} decided on #{vote}"
     client_registry.each { |client, reg|
@@ -53,4 +54,5 @@ include PaxosDemo
     'FAILED'
 
   puts "Agreement: #{agreed}"
+  puts
 }
