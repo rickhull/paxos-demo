@@ -1,6 +1,22 @@
 module PaxosDemo
+  # if all args are the same, return that arg, otherwise nil
+  #
   def self.agreement?(*args)
-    args.all? args[0]
+    args[0] if args.all? args[0]
+  end
+
+  # reduce a hash of mesg => count down to the most numerous message
+  #
+  def self.reduce(msg_counts)
+    mesg = nil
+    count = 0
+    msg_counts.each { |msg, cnt|
+      if cnt > count
+        mesg = msg
+        count = cnt
+      end
+    }
+    mesg
   end
 
   class Network
@@ -46,18 +62,6 @@ module PaxosDemo
   end
 
   class Coordinator < Client
-    def self.process(msgs)
-      mesg = nil
-      count = 0
-      msgs.each { |msg, cnt|
-        if cnt > count
-          mesg = msg
-          count = cnt
-        end
-      }
-      mesg
-    end
-
     attr_reader :msgs
 
     def initialize(*args)
@@ -72,7 +76,7 @@ module PaxosDemo
     end
 
     def process_msgs
-      maj = self.class.process(@msgs)
+      maj = PaxosDemo.reduce(@msgs)
       @msgs = {}
       maj
     end

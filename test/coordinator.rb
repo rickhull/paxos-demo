@@ -3,7 +3,7 @@ require 'minitest/autorun'
 
 include PaxosDemo
 
-describe Coordinator do
+describe PaxosDemo do
   before do
     @clear = {
       alice: 35,
@@ -33,37 +33,51 @@ describe Coordinator do
     }
 
     @empty = {}
-
-    @net = Network.new('test', log: false)
-    @hc = Coordinator.new('test', @net)
-    @client = Client.new('test', @net)
   end
 
-  it "must determine the majority message" do
-    expect(Coordinator.process(@clear)).must_equal(:alice)
-    expect(Coordinator.process(@reverse)).must_equal(:david)
-    25.times {
-      unc = Coordinator.process(@unclear)
-      expect(unc).wont_equal(:david)
-      expect([:alice, :bob, :charlie]).must_include(unc)
-      ted = Coordinator.process(@tied)
-      expect(ted).wont_equal(:david)
-      expect([:alice, :bob, :charlie]).must_include(ted)
-    }
-    expect(Coordinator.process(@empty)).must_be_nil
+  describe "PaxosDemo.reduce" do
+    it "must determine the majority message" do
+      expect(PaxosDemo.reduce(@clear)).must_equal(:alice)
+      expect(PaxosDemo.reduce(@reverse)).must_equal(:david)
+      25.times {
+        unc = PaxosDemo.reduce(@unclear)
+        expect(unc).wont_equal(:david)
+        expect([:alice, :bob, :charlie]).must_include(unc)
+        ted = PaxosDemo.reduce(@tied)
+        expect(ted).wont_equal(:david)
+        expect([:alice, :bob, :charlie]).must_include(ted)
+      }
+      expect(PaxosDemo.reduce(@empty)).must_be_nil
+    end
   end
 
-  it "must accumulate messages in a Hash" do
-    @clear.each { |msg, cnt|
-      cnt.times { @client.send(msg, @hc) }
-    }
-    expect(@hc.msgs).must_equal @clear
-    expect(@hc.process_msgs).must_equal :alice
+  describe "PaxosDemo.agreement?" do
+    it "must determine if all arguments are the same" do
+      expect(PaxosDemo.agreement?(1, 2, 3)).must_be_nil
+      expect(PaxosDemo.agreement?(1, 1, 3)).must_be_nil
+      expect(PaxosDemo.agreement?(1, 1, 1)).must_equal 1
+    end
+  end
 
-    @reverse.each { |msg, cnt|
-      cnt.times { @client.send(msg, @hc) }
-    }
-    expect(@hc.msgs).must_equal @reverse
-    expect(@hc.process_msgs).must_equal :david
+  describe Coordinator do
+    before do
+      @net = Network.new('test', log: false)
+      @hc = Coordinator.new('test', @net)
+      @client = Client.new('test', @net)
+    end
+
+    it "must accumulate messages in a Hash" do
+      @clear.each { |msg, cnt|
+        cnt.times { @client.send(msg, @hc) }
+      }
+      expect(@hc.msgs).must_equal @clear
+      expect(@hc.process_msgs).must_equal :alice
+
+      @reverse.each { |msg, cnt|
+        cnt.times { @client.send(msg, @hc) }
+      }
+      expect(@hc.msgs).must_equal @reverse
+      expect(@hc.process_msgs).must_equal :david
+    end
   end
 end
