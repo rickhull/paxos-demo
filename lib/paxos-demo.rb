@@ -1,3 +1,5 @@
+require 'set'
+
 module PaxosDemo
   # if all args are the same, return that arg, otherwise nil
   #
@@ -62,23 +64,26 @@ module PaxosDemo
   end
 
   class Coordinator < Client
-    attr_reader :msgs
+    attr_reader :msgs, :clients, :choice
 
     def initialize(*args)
       @msgs = {}
+      @clients = Set.new
+      @choice = nil
       super(*args)
     end
 
     def receive(msg, from)
+      @clients << from
       @msgs[msg] ||= 0
       @msgs[msg] += 1
       super(msg, from)
     end
 
     def process_msgs
-      maj = PaxosDemo.reduce(@msgs)
+      @choice = PaxosDemo.reduce(@msgs)
       @msgs = {}
-      maj
+      @choice
     end
   end
 end
