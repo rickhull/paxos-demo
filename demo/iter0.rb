@@ -2,108 +2,50 @@ require 'paxos-demo'
 
 include PaxosDemo
 
-net = Network.new('iter0')
+[0.0, 0.2, 0.4].each { |failure_rate|
+  puts "=" * 40
+  puts "Network failure rate: #{failure_rate}"
+  puts "=" * 40
 
-proposal = 3
-alt_proposal = 4
+  # create a Network
+  net = Network.new('iter0', failure_rate: failure_rate)
 
-coord = Coordinator.new('Coordinator', net)
-alice = Client.new('Alice', net)
-bob = Client.new('Bob', net)
-charlie = Client.new('Charlie', net)
+  # create a Coordinator
+  coord = Coordinator.new('Coordinator', net)
 
-alice.send(proposal, coord)
-bob.send(proposal, coord)
-charlie.send(alt_proposal, coord)
+  # create 5 Clients with an associated structure for what they 'see'
+  client_registry = {
+    Client.new('Alice', net) => {},
+    Client.new('Bob', net) => {},
+    Client.new('Charlie', net) => {},
+    Client.new('David', net) => {},
+    Client.new('Emma', net) => {},
+  }
 
-consensus = coord.process_msgs
-puts "Coordinator decided on #{consensus}"
+  # each client sends a random proposal to the coordinator
+  client_registry.each { |client, reg|
+    # proposal space matches client count
+    reg[:proposal] = Random.rand(client_registry.keys.length)
+    client.send(reg[:proposal], coord)
+  }
 
-alice_val = coord.send(consensus, alice)
-bob_val = coord.send(consensus, bob)
-charlie_val = coord.send(consensus, charlie)
+  # coordinator selects the most popular proposal
+  puts "#{coord} has: #{coord.msgs}"
+  coord.process_msgs
+  puts "#{coord} decided on #{coord.choice}"
 
-puts "Checking consensus..."
-puts "  Alice has: #{alice_val}"
-puts "    Bob has: #{bob_val}"
-puts "Charlie has: #{charlie_val}"
+  # The coordinator can only respond to messages it has received
+  # We don't want to iterate over the full client list, only the clients
+  # that the coordinator has heard from
+  coord.clients.each { |client|
+    # note, this delivery may fail, and the client registry will have nil
+    client_registry[client][:response] = coord.send(coord.choice, client)
+  }
 
-puts "Agreement: #{PaxosDemo.agreement?(alice_val, bob_val, charlie_val)}"
+  agreed =
+    PaxosDemo.agreement?(*client_registry.values.map { |h| h[:response] }) ||
+    'FAILED'
 
-
-puts
-failure_rate = 0.3
-puts "=" * 40
-puts "Now adding Network failures (#{failure_rate * 100}%)"
-puts "=" * 40
-puts
-
-
-net = Network.new('iter0', failure_rate: failure_rate)
-
-proposal = 3
-alt_proposal = 4
-
-coord = Coordinator.new('Coordinator', net)
-alice = Client.new('Alice', net)
-bob = Client.new('Bob', net)
-charlie = Client.new('Charlie', net)
-
-alice.send(proposal, coord)
-bob.send(proposal, coord)
-charlie.send(alt_proposal, coord)
-
-consensus = coord.process_msgs
-puts "Coordinator decided on #{consensus}"
-
-alice_val = coord.send(consensus, alice)
-bob_val = coord.send(consensus, bob)
-charlie_val = coord.send(consensus, charlie)
-
-puts "Checking consensus..."
-puts "  Alice has: #{alice_val}"
-puts "    Bob has: #{bob_val}"
-puts "Charlie has: #{charlie_val}"
-
-puts "Agreement: #{PaxosDemo.agreement?(alice_val, bob_val, charlie_val)}"
-
-
-
-puts
-failure_rate = 0.3
-puts "=" * 40
-puts "Now substituting Coordinator failures (#{failure_rate * 100}%)"
-puts "=" * 40
-puts
-
-
-net = Network.new('iter0')
-
-proposal = 3
-alt_proposal = 4
-
-coord = Coordinator.new('Coordinator',
-                        net,
-                        failure_rate: failure_rate,
-                        log: true)
-alice = Client.new('Alice', net)
-bob = Client.new('Bob', net)
-charlie = Client.new('Charlie', net)
-
-alice.send(proposal, coord)
-bob.send(proposal, coord)
-charlie.send(alt_proposal, coord)
-
-consensus = coord.process_msgs
-puts "Coordinator decided on #{consensus}"
-
-alice_val = coord.send(consensus, alice)
-bob_val = coord.send(consensus, bob)
-charlie_val = coord.send(consensus, charlie)
-
-puts "Checking consensus..."
-puts "  Alice has: #{alice_val}"
-puts "    Bob has: #{bob_val}"
-puts "Charlie has: #{charlie_val}"
-
-puts "Agreement: #{PaxosDemo.agreement?(alice_val, bob_val, charlie_val)}"
+  puts "Agreement: #{agreed}"
+  puts
+}
