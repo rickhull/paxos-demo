@@ -31,7 +31,7 @@ include PaxosDemo
 
   # coordinator selects the most popular proposal
   puts "#{coord} has: #{coord.msgs}"
-  coord.process_msgs
+  coord.process_msgs!
   puts "#{coord} decided on #{coord.choice}"
 
   # The coordinator can only respond to messages it has received

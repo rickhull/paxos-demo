@@ -62,22 +62,32 @@ describe PaxosDemo do
   describe Coordinator do
     before do
       @net = Network.new('test', log: false)
-      @hc = Coordinator.new('test', @net)
+      @coord = Coordinator.new('test', @net)
       @client = Client.new('test', @net)
+      @clear.each { |msg, cnt|
+        cnt.times { @client.send(msg, @coord) }
+      }
     end
 
     it "must accumulate messages in a Hash" do
-      @clear.each { |msg, cnt|
-        cnt.times { @client.send(msg, @hc) }
-      }
-      expect(@hc.msgs).must_equal @clear
-      expect(@hc.process_msgs).must_equal :alice
+      expect(@coord.msgs).must_equal @clear
+    end
 
+    it "must not have a choice until process_msgs!" do
+      expect(@coord.choice).must_be_nil
+      @coord.process_msgs!
+      expect(@coord.choice).must_equal :alice
+    end
+
+    it "must not make a new choice" do
+      expect(@coord.choice).must_be_nil
+      @coord.process_msgs!
+      expect(@coord.choice).must_equal :alice
       @reverse.each { |msg, cnt|
-        cnt.times { @client.send(msg, @hc) }
+        cnt.times { @client.send(msg, @coord) }
       }
-      expect(@hc.msgs).must_equal @reverse
-      expect(@hc.process_msgs).must_equal :david
+      expect(@coord.msgs).must_equal @reverse
+      expect { @coord.process_msgs! }.must_raise RuntimeError
     end
   end
 end

@@ -80,10 +80,16 @@ module PaxosDemo
       super(msg, from)
     end
 
-    def process_msgs
+    def process_msgs!
+      raise "@choice already made" if @choice
       @choice = PaxosDemo.reduce(@msgs)
       @msgs = {}
       @choice
+    end
+
+    def respond(to)
+      raise "no @choice" unless @choice
+      self.send(@choice, to)
     end
   end
 end

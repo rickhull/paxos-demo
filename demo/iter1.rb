@@ -40,13 +40,13 @@ include PaxosDemo
   coords.each { |coord|
     # each coordinator selects the most popular proposal
     puts "#{coord} has: #{coord.msgs}"
-    vote = coord.process_msgs
-    puts "#{coord} decided on #{vote}"
+    coord.process_msgs!
+    puts "#{coord} decided on #{coord.choice}"
 
     # each coordinator responds to clients it has heard from
     coord.clients.each { |client|
       reg = client_registry[client]
-      received = coord.send(vote, client)
+      received = coord.respond(client)
       if received
         reg[:responses][received] ||= 0
         reg[:responses][received] += 1
