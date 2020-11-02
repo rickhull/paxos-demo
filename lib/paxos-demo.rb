@@ -63,6 +63,38 @@ module PaxosDemo
     end
   end
 
+  class StatefulClient < Client
+    attr_accessor :proposal
+    attr_reader :coordinators
+
+    def initialize(*args)
+      super(*args)
+      @proposal = nil
+      @coordinators = {}
+    end
+
+    def propose(coord)
+      raise "no @proposal" unless @proposal
+      @coordinators[coord] = nil
+      send(@proposal, coord)
+    end
+
+    def receive(msg, from)
+      @coordinators[from] = msg
+    end
+
+    def majority
+      msg_counts = {}
+      thresh = @coordinators.count / 2
+      @coordinators.each { |coord, msg|
+        msg_counts[msg] ||= 0
+        msg_counts[msg] += 1
+        return msg if msg_counts[msg] > thresh
+      }
+      raise "no majority: #{msg_counts}"
+    end
+  end
+
   class Coordinator < Client
     attr_reader :msgs, :clients, :choice
 
