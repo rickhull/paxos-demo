@@ -7,13 +7,17 @@ include PaxosDemo
   puts "Network failure rate: #{failure_rate}"
   puts "=" * 40
 
+  # create a Network
   net = Network.new('iter1', failure_rate: failure_rate)
+
+  # create 3 Coordinators
   coords = [
     Coordinator.new('coord0', net),
     Coordinator.new('coord1', net),
     Coordinator.new('coord2', net),
   ]
 
+  # create 5 Clients with an associated structure for what they 'see'
   client_registry = {
     Client.new('Alice', net) => {},
     Client.new('Bob', net) => {},
@@ -22,7 +26,9 @@ include PaxosDemo
     Client.new('Emma', net) => {},
   }
 
+  # each client sends a random proposal to the coordinator
   client_registry.each { |client, reg|
+    # proposal space matches client count
     reg[:proposal] = Random.rand(client_registry.keys.length)
     coords.each { |coord|
       client.send(reg[:proposal], coord)
@@ -32,6 +38,7 @@ include PaxosDemo
   }
 
   coords.each { |coord|
+    # each coordinator selects the most popular proposal
     puts "#{coord} has: #{coord.msgs}"
     vote = coord.process_msgs
     puts "#{coord} decided on #{vote}"
@@ -47,6 +54,7 @@ include PaxosDemo
     }
   }
 
+  # determine the most popular (majority?) response from the coordinators
   client_registry.each { |client, reg|
     maj = PaxosDemo.reduce(reg[:responses])
     puts "#{client} has: #{reg[:responses]}; majority: #{maj}"
