@@ -27,14 +27,18 @@ include PaxosDemo
     coords.each { |coord|
       client.send(reg[:proposal], coord)
     }
+    # create a structure to hold coordinator responses
+    reg[:responses] = {}
   }
 
   coords.each { |coord|
     puts "#{coord} has: #{coord.msgs}"
     vote = coord.process_msgs
     puts "#{coord} decided on #{vote}"
-    client_registry.each { |client, reg|
-      reg[:responses] ||= {}
+
+    # each coordinator responds to clients it has heard from
+    coord.clients.each { |client|
+      reg = client_registry[client]
       received = coord.send(vote, client)
       if received
         reg[:responses][received] ||= 0
