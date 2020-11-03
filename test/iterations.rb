@@ -1,4 +1,4 @@
-require 'paxos-demo'
+require 'paxos-demo/iterations'
 require 'minitest/autorun'
 
 include PaxosDemo

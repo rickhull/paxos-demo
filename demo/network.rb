@@ -1,4 +1,4 @@
-require 'paxos-demo'
+require 'paxos-demo/network'
 
 net = PaxosDemo::Network.new('test')
 
@@ -7,4 +7,3 @@ bob = PaxosDemo::Client.new('Bob', net)
 
 alice.send(5, bob)
 bob.send(10, alice)
-
