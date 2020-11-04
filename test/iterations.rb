@@ -61,9 +61,8 @@ describe PaxosDemo do
 
   describe Coordinator do
     before do
-      @net = Network.new('test', log: false)
-      @coord = Coordinator.new('test', @net)
-      @client = Client.new('test', @net)
+      @coord = Coordinator.new('test', log: false)
+      @client = Agent.new('test', log: false)
       @clear.each { |msg, cnt|
         cnt.times { @client.send(msg, @coord) }
       }

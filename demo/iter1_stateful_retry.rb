@@ -2,28 +2,25 @@ require 'paxos-demo/iterations'
 
 include PaxosDemo
 
-[0.0, 0.2, 0.4].each { |failure_rate|
+[0.0, 0.2, 0.4].each { |fr|
   puts "=" * 40
-  puts "Network failure rate: #{failure_rate}"
+  puts "Network failure rate: #{fr}"
   puts "=" * 40
-
-  # create a Network
-  net = Network.new('iter1', failure_rate: failure_rate)
 
   # create 3 Coordinators
   coords = [
-    Coordinator.new('coord0', net),
-    Coordinator.new('coord1', net),
-    Coordinator.new('coord2', net),
+    Coordinator.new('coord0', failure_rate: fr),
+    Coordinator.new('coord1', failure_rate: fr),
+    Coordinator.new('coord2', failure_rate: fr),
   ]
 
-  # create 5 Clients with an associated structure for what they 'see'
+  # create 5 Agents with an associated structure for what they 'see'
   clients = [
-    StatefulClient.new('Alice', net),
-    StatefulClient.new('Bob', net),
-    StatefulClient.new('Charlie', net),
-    StatefulClient.new('David', net),
-    StatefulClient.new('Emma', net),
+    StatefulAgent.new('Alice', failure_rate: fr),
+    StatefulAgent.new('Bob', failure_rate: fr),
+    StatefulAgent.new('Charlie', failure_rate: fr),
+    StatefulAgent.new('David', failure_rate: fr),
+    StatefulAgent.new('Emma', failure_rate: fr),
   ]
 
   # each client sends a random proposal to each coordinator

@@ -1,4 +1,4 @@
-require 'paxos-demo/network'
+require 'paxos-demo/agent'
 require 'set'
 
 module PaxosDemo
@@ -22,7 +22,37 @@ module PaxosDemo
     mesg
   end
 
-  class StatefulClient < Client
+  class Coordinator < Agent
+    attr_reader :msgs, :clients, :choice
+
+    def initialize(*args)
+      @msgs = {}
+      @clients = Set.new
+      @choice = nil
+      super(*args)
+    end
+
+    def receive(msg, from)
+      @clients << from
+      @msgs[msg] ||= 0
+      @msgs[msg] += 1
+      super(msg, from)
+    end
+
+    def process_msgs!
+      raise "@choice already made" if @choice
+      @choice = PaxosDemo.reduce(@msgs)
+      @msgs = {}
+      @choice
+    end
+
+    def respond(to)
+      raise "no @choice" unless @choice
+      self.send(@choice, to)
+    end
+  end
+
+  class StatefulAgent < Agent
     attr_accessor :proposal
     attr_reader :coordinators
 
@@ -51,36 +81,6 @@ module PaxosDemo
         return msg if msg_counts[msg] > thresh
       }
       raise "no majority: #{msg_counts}"
-    end
-  end
-
-  class Coordinator < Client
-    attr_reader :msgs, :clients, :choice
-
-    def initialize(*args)
-      @msgs = {}
-      @clients = Set.new
-      @choice = nil
-      super(*args)
-    end
-
-    def receive(msg, from)
-      @clients << from
-      @msgs[msg] ||= 0
-      @msgs[msg] += 1
-      super(msg, from)
-    end
-
-    def process_msgs!
-      raise "@choice already made" if @choice
-      @choice = PaxosDemo.reduce(@msgs)
-      @msgs = {}
-      @choice
-    end
-
-    def respond(to)
-      raise "no @choice" unless @choice
-      self.send(@choice, to)
     end
   end
 end
