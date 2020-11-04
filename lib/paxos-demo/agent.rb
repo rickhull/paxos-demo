@@ -1,9 +1,13 @@
 module PaxosDemo
   class Agent
+    attr_reader :name, :messages
+    attr_accessor :failure_rate, :log
+
     def initialize(name, failure_rate: 0.0, log: true)
       @name = name.to_s
       @failure_rate = failure_rate
       @log = log
+      @messages = {}
     end
 
     def send(msg, to)
@@ -16,7 +20,8 @@ module PaxosDemo
     end
 
     def receive(msg, from)
-      # just a hook for now?
+      @messages[from] ||= []
+      @messages[from] << msg
       msg
     end
 
